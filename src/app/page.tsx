@@ -7,6 +7,7 @@ import { RecommendationCard } from "@/components/RecommendationCard";
 import { RunningScore } from "@/components/RunningScore";
 import { SearchBar } from "@/components/SearchBar";
 import { WeatherCard } from "@/components/WeatherCard";
+import { WeatherLoader } from "@/components/WeatherLoader";
 import type { WeatherResponse } from "@/types/weather";
 
 export default function Home() {
@@ -61,7 +62,9 @@ export default function Home() {
           </p>
         )}
 
-        {data && (
+        {isLoading && <WeatherLoader />}
+
+        {!isLoading && data && (
           <div className="grid gap-6 lg:grid-cols-2">
             <WeatherCard
               location={data.weather.location}

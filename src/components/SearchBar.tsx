@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 interface SearchBarProps {
   onSearch: (city: string) => void;
@@ -34,8 +34,12 @@ export function SearchBar({ onSearch, isLoading = false }: SearchBarProps) {
         disabled={isLoading || !city.trim()}
         className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
       >
-        <Search size={18} />
-        Search
+        {isLoading ? (
+          <Loader2 size={18} className="animate-spin" />
+        ) : (
+          <Search size={18} />
+        )}
+        {isLoading ? "Searching..." : "Search"}
       </button>
     </form>
   );
