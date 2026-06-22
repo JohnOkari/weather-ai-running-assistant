@@ -1,36 +1,185 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Weather AI Running Assistant
 
-## Getting Started
+A Next.js app that fetches weather from the [Weather AI API](https://weather-ai.co/docs), scores conditions for outdoor running, and displays forecasts with personalized recommendations.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- City search with loading skeletons
+- Current weather conditions
+- Running score (0–100) based on temperature, humidity, precipitation, and wind
+- AI-style recommendation text
+- 24-hour forecast chart
+
+## Prerequisites
+
+- Node.js 20+
+- npm (or yarn / pnpm / bun)
+- A Weather AI API key ([get one from the dashboard](https://weather-ai.co/docs))
+
+## Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd weather-ai-running-assistant
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**
+
+   Create a `.env.local` file in the project root:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Or create it manually with the following values:
+
+   ```env
+   WEATHER_AI_API_KEY=wai_your_api_key_here
+   WEATHER_AI_BASE_URL=https://api.weather-ai.co
+   ```
+
+   > **Important:** `.env.local` is gitignored. Never commit API keys to version control.
+
+4. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000), search for a city, and view the results.
+
+## Configuration
+
+### Environment variables
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `WEATHER_AI_API_KEY` | Yes | — | Bearer token for the Weather AI API (prefix `wai_`) |
+| `WEATHER_AI_BASE_URL` | No | `https://api.weather-ai.co` | Base URL for Weather AI API requests |
+
+### Example `.env.local`
+
+```env
+WEATHER_AI_API_KEY=wai_your_api_key_here
+WEATHER_AI_BASE_URL=https://api.weather-ai.co
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Application constants
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Defined in `src/constants/weather.ts`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Constant | Value | Description |
+| --- | --- | --- |
+| `DEFAULT_WEATHER_AI_BASE_URL` | `https://api.weather-ai.co` | Fallback API base URL |
+| `DEFAULT_UNITS` | `metric` | Temperature and wind units sent to the API |
+| `FORECAST_HOURS` | `24` | Number of hourly forecast points shown |
+| `NOMINATIM_BASE_URL` | `https://nominatim.openstreetmap.org` | Geocoding service for city → coordinates |
 
-## Learn More
+### TypeScript path aliases
 
-To learn more about Next.js, take a look at the following resources:
+Configured in `tsconfig.json`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/weather/route.ts   # GET /api/weather?city=...
+│   ├── layout.tsx
+│   ├── page.tsx               # Search page (client component)
+│   └── globals.css
+├── components/
+│   ├── SearchBar.tsx
+│   ├── WeatherCard.tsx
+│   ├── RunningScore.tsx
+│   ├── RecommendationCard.tsx
+│   ├── ForecastChart.tsx
+│   └── WeatherLoader.tsx
+├── services/
+│   └── weather.service.ts     # Weather AI + geocoding integration
+├── lib/
+│   └── score.ts               # Running score calculation
+├── types/
+│   └── weather.ts             # API and app domain types
+└── constants/
+    └── weather.ts
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start development server |
+| `npm run build` | Create production build |
+| `npm run start` | Run production server |
+| `npm run lint` | Run ESLint |
+
+## API
+
+### `GET /api/weather`
+
+Fetches weather and running score for a city.
+
+**Query parameters**
+
+| Param | Required | Description |
+| --- | --- | --- |
+| `city` | Yes | City name (e.g. `London`, `Nairobi`) |
+
+**Example**
+
+```bash
+curl "http://localhost:3000/api/weather?city=London"
+```
+
+**Response**
+
+```json
+{
+  "weather": {
+    "location": "London",
+    "current": { "temperature": 15, "feelsLike": 14, "humidity": 72, "windSpeed": 3.5, "precipitation": 0, "condition": { "id": 1003, "main": "Cloudy", "description": "partly cloudy", "icon": "..." } },
+    "forecast": [{ "time": "...", "temperature": 14, "precipitation": 0, "windSpeed": 3.2 }]
+  },
+  "runningScore": {
+    "score": 78,
+    "rating": "good",
+    "factors": { "temperature": 85, "humidity": 90, "precipitation": 100, "wind": 72 },
+    "recommendation": "Solid running weather. Stay hydrated and pace yourself."
+  }
+}
+```
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router)
+- [React 19](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Tailwind CSS 4](https://tailwindcss.com)
+- [Recharts](https://recharts.org) — forecast chart
+- [Lucide React](https://lucide.dev) — icons
+- [Weather AI API](https://weather-ai.co/docs) — weather data
+- [OpenStreetMap Nominatim](https://nominatim.org) — city geocoding
+
+## License
+
+Private project.
